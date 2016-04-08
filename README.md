@@ -8,6 +8,8 @@ This is a demonstration of how we can display field event results, live, so that
 > express (npm install express) // will be removed soon as no longer a requirement.
 
 > socket.io (npm install socket.io) // Handles websocket broadcasts.
+
+> forever (npm install forever) // keeps server.js running when it goes belly up
   
 ##### index.html:
 > This now does not need to be served from node server and can be loaded independantly from non-ssl servers.
