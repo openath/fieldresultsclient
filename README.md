@@ -13,5 +13,8 @@ This is a demonstration of how we can display field event results, live, so that
   
 ##### index.html:
 > This now does not need to be served from node server and can be loaded independantly from non-ssl servers.
+
+##### examples/rawdemo.html:
+> Most stripped down basic client posible. Writes the raw json results from the server to the console.
   
 
