@@ -66,6 +66,7 @@ body {
 }
 
 .bar {
+	position: absolute;
 	display: inline-block;
 	border-radius: 30px 0px 30px 0px;
 	border-radius: 5px;
@@ -76,6 +77,8 @@ body {
 	-webkit-transition: all 0.5s;
 	/* Safari */
 	transition: all 0.5s;
+	margin-top: 5px;
+	z-index: 50;
 	/* Safari */
 }
 
@@ -134,6 +137,49 @@ body {
 	margin-right: auto;
 }
 
+.bar-holder {
+	position: relative;
+	height: 30px;
+}
+
+.wrbar {
+	position: absolute;
+	left: 0;
+	width: 50%;
+	border-right: 1px solid red;
+	height: 100%;
+}
+
+.crbar {
+	z-index: 30;
+	position: absolute;
+	left: 0;
+	width: 40%;
+	border-right: 1px solid green;
+	height: 100%;
+	-webkit-transition: all 0.5s;
+	/* Safari */
+	transition: all 0.5s;
+}
+
+.results-table td {
+	padding: 0 !important;
+}
+
+.padout {
+	margin: 5px;
+}
+
+.r-back {
+	width: 100%;
+	position: absolute;
+	left: 0;
+	background-color: #ffffff;
+	z-index: 5;
+	height: 100%;
+	/* w3c */
+}
+
 footer {
 	background-color: #f5f5f5;
 	margin-left: -20px;
@@ -151,7 +197,7 @@ footer {
 			<div class="title-holder">
 				<h2>UK Championships 2015 - Senior Mens' Shot<br/>Round <span id="round"></span><br/><small>Watch the animation. tap an athlete to view details</small></h2></div>
 		</div>
-		<table class="table">
+		<table class="table results-table">
 		</table>
 	</div>
 	<div class="panel panel-default">
@@ -182,7 +228,14 @@ footer {
 			var r = parseInt(value * 255);
 			var b = 255 - r;
 			var g = 0;
-			return "rgba(" + r + "," + g + ", " + b + ",0.7)";
+			var bright = 100;
+			r = parseInt((255 - r) / 3) + r;
+			g = parseInt((255 - g) / 3) + g;
+			b = parseInt((255 - b) / 3) + b;
+			// if(r<255-bright)r+=bright;
+			// if(g<255-bright)g+=bright;
+			// if(b<255-bright)b+=bright;
+			return "rgba(" + r + "," + g + ", " + b + ",1)";
 		} else {
 			return null;
 		}
@@ -197,17 +250,17 @@ footer {
 
 	// creates 1st, 2nd, 3rd from integer
 	function st(number) {
-		if(number !==''){
+		if (number !== '') {
 			var out = 'th';
 			if (number.toString().substr(-1) == 1) out = 'st';
 			if (number.toString().substr(-1) == 2) out = 'nd';
 			if (number.toString().substr(-1) == 3) out = 'rd';
 			if (number == 11 || number == 12 || number == 13) out = 'th';
 			return number + out;
-		}else{
+		} else {
 			return '';
 		}
-		
+
 	}
 
 
@@ -215,40 +268,70 @@ footer {
 
 	$('document').ready(function() {
 		var socket = io.connect("http://52.17.157.187:3001"); // setup websocket
+		var WR = '21.68';
+		var MR = '18.00';
 		socket.on('update', function(data) { // react to update call from server
 			var results = parseResults(data.results);
-			var x,place,dis,placeCol,tempCol,res,rndRes,newrow,resBest,maxRound,last,y,color;
-			var min = results.min;
-			var max = results.max;
+			var x, place, dis, placeCol, tempCol, res, rndRes, newrow, resBest, maxRound, last, y, color, record;
+			var ressi;
+			var min = (results.min / 4) * 3;
+			var max = WR;
 			$('#round').text(data.head.round + 1);
-
+			var recordString;
+			var grn = '#cceecc';
+			var rd = '#ffcccc';
 			// if no table drawn, draw new results table, else update existing table. (very hacky).
-
+			ressi = [];
 			if ($('.table').children().length === 0) {
+
+				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
+				//var recordString='(90deg, #ffffff 0%, #ffffff 85%,'+grn+' 85%,#ffffff 90%, #ffffff 95%,'+rd+' 95%, #ffffff 100%)';
+				recordString = '(90deg, #ffffff 0%, #ffffff ' + dis + '%,' + grn + ' ' + dis + '%,' + grn + ' 95%, #ffffff 95%,' + rd + ' 95%, ' + rd + ' 100%)';
+				//background: -webkit-gradient(linear, left bottom, right top, color-stop(0%, #ffffff), color-stop(50%, #ffffff),color-stop(50%, #ccffcc),color-stop(60%, #ffffff), color-stop(80%, #ffffff),color-stop(80%, #ffcccc), color-stop(90%, #ffffff));
+
+
+
+
+
+
 				for (x = 0; x < results.results.length; x++) {
 					place = results.order.indexOf(results.results[x].best) + 1;
 					dis = ((Number(results.results[x].best) - min) / (max - min)) * (90) + 5;
 					placeCol = '';
-					if (place == 1) placeCol = 'gold';
-					if (place == 2) placeCol = 'silver';
-					if (place == 3) placeCol = 'bronze';
+
 					color = '';
 					tempCol = hsl(place, results.results.length);
+
 					if (tempCol) color = 'background-color:' + tempCol + "; ";
+					if (place == 1) {
+						placeCol = 'gold';
+						tempCol = "rgba(231, 167, 46,0.3)"
+					}
+					if (place == 2) {
+						placeCol = 'silver';
+						tempCol = "rgba(168, 168, 168,0.3)"
+					}
+					if (place == 3) {
+						placeCol = 'bronze';
+						tempCol = "rgba(150, 90, 56,0.3)"
+					}
 					res = results.results[x];
 					rndRes = resultify(res.data[res.data.length - 1]);
-					
+
 					resBest = '---';
 					if (res.best && res.best !== 'X') resBest = Number(res.best).toFixed(2);
-					console.log(resBest);
-					if(isNaN(resBest)){
+					if (isNaN(resBest)) {
 
 						dis = 0;
 						place = '';
+						tempCol = 'rgba(255, 255, 255,0)';
 					};
+					record = '';
+					if (resBest * 1 >= MR * 1 && place == 1) record = "MR ";
+					if (resBest * 1 >= WR * 1 && place == 1) record = "UKR ";
 
-					
-					$('.table').append('<tr id="bar_' + x + '" data-id="' + x + '" class="athlete-more"><td>' + (x + 1) + '</td><td><b>' + res.number + '</b></td><td><b>' + res.first_name + ' ' + res.last_name + '</b> <small>(' + res.club + ')</small></td><td id="round_' + x + '" class="text-right">' + rndRes + '<small> R' + (res.data.length) + '</small></td><td class="text-right"><b id="best_' + x + '">' + resBest + '</b></td><td style="width:50%"> <div id="place_' + x + '"  class="bar ' + placeCol + ' text-right" style="' + color + 'width:' + dis + '%;">' + st(place) + '</div></td></tr>');
+					$('.table').append('<tr id="bar_' + x + '" data-id="' + x + '" class="athlete-more"><td class=""><div class="padout">' + (x + 1) + '</div></td><td class=""><div class="padout"><b>' + res.number + '</b></div></td><td class=""><div class="padout"><b>' + res.first_name + ' ' + res.last_name + '</b> <small>(' + res.club + ')</small></div></td><td  class="text-right "><div id="round_' + x + '" class="padout">' + rndRes + '<small> R' + (res.data.length) + '</small></div></td><td class="text-right "><div class="padout"><b id="best_' + x + '">' + resBest + '</b></div></td><td style="width:50%"><div class="bar-holder"> <div id="place_' + x + '"  class="bar ' + placeCol + ' text-right" style="' + color + 'width:' + dis + '%;">' + record + st(place) + '</div><div class="r-back">&nbsp;</div></div></td></tr>');
+
 					newrow = '';
 					for (y = 0; y < 6; y++) {
 						rndRes = resultify(res.data[y]);
@@ -257,35 +340,69 @@ footer {
 					newrow += '<td style=""> <a target="_blank" href="http://www.powerof10.info/athletes/athleteslookup.aspx?surname=' + res.last_name + '&firstname=' + res.first_name + '&club=' + res.club + '" ><span style="color:white">tap to find athlete on </span><b><span style="color:white">power </span><span style="color:red">of 10</span></b></a></td>';
 
 					$('.table').append('<tr id="details_no' + x + '" class="details details-no' + x + '"><td class="inner-holder" colspan="6"><table class="inner-details" style="width:100%"><tr>' + newrow + '</tr></table></td></tr>');
+					ressi.push({
+						col: tempCol,
+						width: dis
+					});
+
 
 
 				}
+				$('.r-back').css({
+					'background': '-moz-linear-gradient' + recordString,
+					'background': '-moz-linear-gradient' + recordString,
+					'background': '-webkit-linear-gradient' + recordString,
+					'background': '-o-linear-gradient' + recordString,
+					'background': '-o-ms-gradient' + recordString,
+					'background': 'linear-gradient' + recordString
+				});
+				for (var i = 0; i < ressi.length; i++) {
+					$('.bar-holder').prepend('<div style="width:' + ressi[i].width + '%;' + 'border-color:' + ressi[i].col.replace(',1)', ',0.3)') + '" class="crbar crbar' + i + '">&nbsp;</div>');
+				}
+
 			} else {
 				maxRound = 0;
 				last = 0;
+				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
+
+				//var recordString='(90deg, #ffffff 0%, #ffffff 85%,'+grn+' 85%,#ffffff 90%, #ffffff 95%,'+rd+' 95%, #ffffff 100%)';
+				recordString = '(90deg, #ffffff 0%, #ffffff ' + dis + '%,' + grn + ' ' + dis + '%,' + grn + ' 95%, #ffffff 95%,' + rd + ' 95%, ' + rd + ' 100%)';
+				$('.r-back').css({
+					'background': '-moz-linear-gradient' + recordString,
+					'background': '-moz-linear-gradient' + recordString,
+					'background': '-webkit-linear-gradient' + recordString,
+					'background': '-o-linear-gradient' + recordString,
+					'background': '-o-ms-gradient' + recordString,
+					'background': 'linear-gradient' + recordString
+				});
 				for (x = 0; x < results.results.length; x++) {
 					place = results.order.indexOf(results.results[x].best) + 1;
 					dis = ((Number(results.results[x].best) - min) / (max - min)) * (90) + 5;
 					placeCol = '';
-					if (place == 1) placeCol = 'gold';
-					if (place == 2) placeCol = 'silver';
-					if (place == 3) placeCol = 'bronze';
+
 					color = '';
 					tempCol = hsl(place, results.results.length);
 					if (tempCol) color = 'background-color:' + tempCol + "; ";
+					if (place == 1) {
+						placeCol = 'gold';
+						tempCol = "rgba(231, 167, 46,0.3)"
+					}
+					if (place == 2) {
+						placeCol = 'silver';
+						tempCol = "rgba(168, 168, 168,0.3)"
+					}
+					if (place == 3) {
+						placeCol = 'bronze';
+						tempCol = "rgba(150, 90, 56,0.3)"
+					}
 					res = results.results[x];
 					rndRes = resultify(res.data[res.data.length - 1]);
 					resBest = '---';
-					
-
-					
-
-
 					if (res.best && res.best !== 'X') resBest = Number(res.best).toFixed(2);
-
-					if(isNaN(resBest)){
+					if (isNaN(resBest)) {
 						dis = 0;
 						place = '';
+						tempCol = 'rgba(255, 255, 255,0)';
 					};
 
 					$('#place_' + x).removeClass('gold').removeClass('silver').removeClass('bronze');
@@ -294,7 +411,10 @@ footer {
 						'background-color': tempCol,
 						width: dis + '%'
 					});
-					$('#place_' + x).text(st(place));
+					record = '';
+					if (resBest * 1 >= MR * 1 && place == 1) record = "MR ";
+					if (resBest * 1 >= WR * 1 && place == 1) record = "UKR ";
+					$('#place_' + x).text(record + st(place));
 					$('#round_' + x).html(rndRes + ' <small> R' + (res.data.length) + '</small>');
 					$('#best_' + x).html(resBest);
 					$('#bar_' + x).css('color', 'black');
@@ -302,6 +422,11 @@ footer {
 						maxRound = res.data.length;
 						last = x;
 					}
+					ressi.push({
+						col: tempCol,
+						width: dis
+					});
+
 					newrow = '';
 					for (y = 0; y < 6; y++) {
 						rndRes = resultify(res.data[y]);
@@ -313,6 +438,20 @@ footer {
 					$('#details_no' + x).html('<td class="inner-holder" colspan="6"><table class="inner-details" style="width:100%"><tr>' + newrow + '</tr></table></td>');
 				}
 				$('#bar_' + last).css('color', '#cc0000');
+
+				for (var i = 0; i < ressi.length; i++) {
+					//console.log({'width':ressi[i].width+'%','border-color': ressi[i].col.replace('0.7','0.2')});
+
+					$('.crbar' + i).css({
+						'width': ressi[i].width + '%',
+						'border-color': ressi[i].col.replace(',1)', ',0.3)')
+					});
+					//$('.crbar'+i).css({'width':ressi[i].width+'%','border-color': ressi[i].col.replace('0.7','0.2')});
+					// $('.crbar'+i).each(function(){
+					// 	$(this).css({width:ressi[i].width+'%;','border-color': ressi[i].col});
+					// });
+				}
+				//console.log();
 			}
 		});
 
