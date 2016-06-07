@@ -2,7 +2,9 @@
 <html>
 
 <head>
-	<link href="https://s3-eu-west-1.amazonaws.com/hbfile/s2store/bootstrap.min.css" rel="stylesheet">
+	<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://s3-eu-west-1.amazonaws.com/hbfile/s2store/bootstrap.min.css" rel="stylesheet" media="screen">
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 	<script>
@@ -11,6 +13,14 @@
 <style>
 body {
 	padding: 20px;
+}
+
+.wideBar {
+	width: 50%;
+}
+
+.narrowBar {
+	display: none;
 }
 
 .gold {
@@ -188,6 +198,27 @@ footer {
 	margin-top: 60px;
 	border-top: 1px solid #ddd;
 }
+
+@media (max-width: 750px) {
+	.crbar {
+		display: none;
+	}
+	.wideBar {
+		display: none;
+	}
+	.narrowBar {
+		display: table-cell;
+		border-top: 0 solid white !important;
+	}
+	.bar-holder{
+		height:20px;
+		font-size:10px;
+
+	}
+	.bar{
+		border-radius: 0px 10px 10px 0px;
+	}
+}
 </style>
 
 <body>
@@ -232,9 +263,6 @@ footer {
 			r = parseInt((255 - r) / 3) + r;
 			g = parseInt((255 - g) / 3) + g;
 			b = parseInt((255 - b) / 3) + b;
-			// if(r<255-bright)r+=bright;
-			// if(g<255-bright)g+=bright;
-			// if(b<255-bright)b+=bright;
 			return "rgba(" + r + "," + g + ", " + b + ",1)";
 		} else {
 			return null;
@@ -262,11 +290,12 @@ footer {
 		}
 
 	}
-
-
 	// main code
 
 	$('document').ready(function() {
+		setInterval(function() {
+			console.log($(window).width());
+		}, 100);
 		var socket = io.connect("http://52.17.157.187:3001"); // setup websocket
 		var WR = '21.68';
 		var MR = '18.00';
@@ -287,13 +316,6 @@ footer {
 				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
 				//var recordString='(90deg, #ffffff 0%, #ffffff 85%,'+grn+' 85%,#ffffff 90%, #ffffff 95%,'+rd+' 95%, #ffffff 100%)';
 				recordString = '(90deg, #ffffff 0%, #ffffff ' + dis + '%,' + grn + ' ' + dis + '%,' + grn + ' 95%, #ffffff 95%,' + rd + ' 95%, ' + rd + ' 100%)';
-				//background: -webkit-gradient(linear, left bottom, right top, color-stop(0%, #ffffff), color-stop(50%, #ffffff),color-stop(50%, #ccffcc),color-stop(60%, #ffffff), color-stop(80%, #ffffff),color-stop(80%, #ffcccc), color-stop(90%, #ffffff));
-
-
-
-
-
-
 				for (x = 0; x < results.results.length; x++) {
 					place = results.order.indexOf(results.results[x].best) + 1;
 					dis = ((Number(results.results[x].best) - min) / (max - min)) * (90) + 5;
@@ -330,7 +352,7 @@ footer {
 					if (resBest * 1 >= MR * 1 && place == 1) record = "MR ";
 					if (resBest * 1 >= WR * 1 && place == 1) record = "UKR ";
 
-					$('.table').append('<tr id="bar_' + x + '" data-id="' + x + '" class="athlete-more"><td class=""><div class="padout">' + (x + 1) + '</div></td><td class=""><div class="padout"><b>' + res.number + '</b></div></td><td class=""><div class="padout"><b>' + res.first_name + ' ' + res.last_name + '</b> <small>(' + res.club + ')</small></div></td><td  class="text-right "><div id="round_' + x + '" class="padout">' + rndRes + '<small> R' + (res.data.length) + '</small></div></td><td class="text-right "><div class="padout"><b id="best_' + x + '">' + resBest + '</b></div></td><td style="width:50%"><div class="bar-holder"> <div id="place_' + x + '"  class="bar ' + placeCol + ' text-right" style="' + color + 'width:' + dis + '%;">' + record + st(place) + '</div><div class="r-back">&nbsp;</div></div></td></tr>');
+					$('.table').append('<tr id="bar_' + x + '" data-id="' + x + '" class="athlete-more"><td class=""><div class="padout">' + (x + 1) + '</div></td><td class=""><div class="padout"><b>' + res.number + '</b></div></td><td class=""><div class="padout"><b>' + res.first_name + ' ' + res.last_name + '</b> <small>(' + res.club + ')</small></div></td><td  class="text-right "><div id="round_' + x + '" class="padout">' + rndRes + '<small> R' + (res.data.length) + '</small></div></td><td class="text-right "><div class="padout"><b id="best_' + x + '">' + resBest + '</b></div></td><td class="wideBar" style=""><div class="bar-holder"> <div id=""  class="place_' + x + ' bar ' + placeCol + ' text-right" style="' + color + 'width:' + dis + '%;">' + record + st(place) + '</div><div class="r-back">&nbsp;</div></div></td></tr><tr><td class="narrowBar" colspan="6" style="width:100%"><div class="bar-holder"> <div id=""  class="place_' + x + ' bar ' + placeCol + ' text-right" style="' + color + 'width:' + dis + '%;">' + record + st(place) + '</div><div class="r-back">&nbsp;</div></div></td></tr>');
 
 					newrow = '';
 					for (y = 0; y < 6; y++) {
@@ -364,8 +386,6 @@ footer {
 				maxRound = 0;
 				last = 0;
 				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
-
-				//var recordString='(90deg, #ffffff 0%, #ffffff 85%,'+grn+' 85%,#ffffff 90%, #ffffff 95%,'+rd+' 95%, #ffffff 100%)';
 				recordString = '(90deg, #ffffff 0%, #ffffff ' + dis + '%,' + grn + ' ' + dis + '%,' + grn + ' 95%, #ffffff 95%,' + rd + ' 95%, ' + rd + ' 100%)';
 				$('.r-back').css({
 					'background': '-moz-linear-gradient' + recordString,
@@ -405,16 +425,16 @@ footer {
 						tempCol = 'rgba(255, 255, 255,0)';
 					};
 
-					$('#place_' + x).removeClass('gold').removeClass('silver').removeClass('bronze');
-					$('#place_' + x).addClass(placeCol);
-					$('#place_' + x).css({
+					$('.place_' + x).removeClass('gold').removeClass('silver').removeClass('bronze');
+					$('.place_' + x).addClass(placeCol);
+					$('.place_' + x).css({
 						'background-color': tempCol,
 						width: dis + '%'
 					});
 					record = '';
 					if (resBest * 1 >= MR * 1 && place == 1) record = "MR ";
 					if (resBest * 1 >= WR * 1 && place == 1) record = "UKR ";
-					$('#place_' + x).text(record + st(place));
+					$('.place_' + x).text(record + st(place));
 					$('#round_' + x).html(rndRes + ' <small> R' + (res.data.length) + '</small>');
 					$('#best_' + x).html(resBest);
 					$('#bar_' + x).css('color', 'black');
@@ -432,29 +452,19 @@ footer {
 						rndRes = resultify(res.data[y]);
 						newrow += '<td id="" style="width:10%">' + rndRes + "</td>";
 					}
-
-
 					newrow += '<td style=""> <a target="_blank" href="http://www.powerof10.info/athletes/athleteslookup.aspx?surname=' + res.last_name + '&firstname=' + res.first_name + '&club=' + res.club + '" ><span style="color:white">tap to find athlete on </span><b><span style="color:white">power </span><span style="color:red">of 10</span></b></a></td>';
 					$('#details_no' + x).html('<td class="inner-holder" colspan="6"><table class="inner-details" style="width:100%"><tr>' + newrow + '</tr></table></td>');
 				}
 				$('#bar_' + last).css('color', '#cc0000');
 
 				for (var i = 0; i < ressi.length; i++) {
-					//console.log({'width':ressi[i].width+'%','border-color': ressi[i].col.replace('0.7','0.2')});
-
 					$('.crbar' + i).css({
 						'width': ressi[i].width + '%',
 						'border-color': ressi[i].col.replace(',1)', ',0.3)')
 					});
-					//$('.crbar'+i).css({'width':ressi[i].width+'%','border-color': ressi[i].col.replace('0.7','0.2')});
-					// $('.crbar'+i).each(function(){
-					// 	$(this).css({width:ressi[i].width+'%;','border-color': ressi[i].col});
-					// });
 				}
-				//console.log();
 			}
 		});
-
 
 
 		// outputs 2dp for measurement, and '-' if round passed
