@@ -226,7 +226,7 @@ footer {
 		<div class="panel-heading">
 			<div class="logo-holder"><img class="logo" src="http://res.cloudinary.com/moot/image/upload/t_brand_logo/v1458053398/p:brand_logo:opentrack.png" /></div>
 			<div class="title-holder">
-				<h2>UK Championships 2015 - Senior Mens' Shot<br/>Round <span id="round"></span><br/><small>Watch the animation. tap an athlete to view details</small></h2></div>
+				<h2><small id="event_location"></small><br/><span id="event_name"></span><br/>Round <span id="round"></span><br/><small>Tap an athlete to view details</small></h2></div>
 		</div>
 		<table class="table results-table">
 		</table>
@@ -235,7 +235,7 @@ footer {
 		<div class="panel-heading">
 			<h3>About this demo</h3></div>
 		<div class="about">
-			This is a demonstration of how we can display field event results, live, so that spectators can follow the action. We're "replaying" a competition in a loop for demo purposes. For an event in progress, an official with a phone or tablet would input the throws, and anyone watching - parents and friends at trackside, or anywhere in the world - can follow the state of the match easily. Try viewing this on multiple devices, the updates should arrive on each device simultaneously.</div>
+		</div>
 	</div>
 	<footer class="footer">
 		<div class="container">
@@ -293,29 +293,46 @@ footer {
 	// main code
 
 	$('document').ready(function() {
-		// setInterval(function() {
-		// 	console.log($(window).width());
-		// }, 100);
-		var socket = io.connect("http://52.17.157.187:3001"); // setup websocket
-		var WR = '21.68';
-		var MR = '18.00';
+
+		//var eventID = 'opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee'; // SP - Men
+		//var eventID = "opentrack:length-event:97505321-6803-493b-b1ff-aafddfd0c7cc"; // Javelin - Men
+		//var eventID = 'opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee'; // SP - Men
+		//var eventID = 'opentrack:length-event:7d25f3d6-91b6-4de2-9647-022787427c6f'; // TJ - men
+		//var eventID = 'opentrack:length-event:9a6f5590-411f-413e-9c03-332b3a592eda'; // Hammer - men
+		var eventID = 'opentrack:length-event:d39e544e-bb89-4778-be19-97cc6b207c6c'; // Shot - U13G
+		var WR = '70.68';
+		var MR = '40.00';
+
+		var vals = (getUrlVars());
+		if(vals.id)eventID=vals.id;
+		if(vals.wr && !isNaN(vals.wr))WR=vals.wr;
+		if(vals.mr && !isNaN(vals.mr))MR=vals.mr;
+
+
+		var socket = io.connect("http://52.17.157.187:3003?id="+eventID); // setup websocket
+		//socket.join('opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee');
 		socket.on('update', function(data) { // react to update call from server
-			console.log(data);
+			data = (parseData(data));
+			
+		
+
+			$('#event_name').text(data.name);
+			$('#event_location').text(data.location);
 			var results = parseResults(data.results);
 			var x, place, dis, placeCol, tempCol, res, rndRes, newrow, resBest, maxRound, last, y, color, record;
 			var ressi;
 			var min = (results.min / 4) * 3;
 			var max = WR;
-			$('#round').text(data.head.round + 1);
+			$('#round').text(data.head.round);
 			var recordString;
 			var grn = '#cceecc';
 			var rd = '#ffcccc';
 			// if no table drawn, draw new results table, else update existing table. (very hacky).
 			ressi = [];
+
 			if ($('.table').children().length === 0) {
 
 				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
-				//var recordString='(90deg, #ffffff 0%, #ffffff 85%,'+grn+' 85%,#ffffff 90%, #ffffff 95%,'+rd+' 95%, #ffffff 100%)';
 				recordString = '(90deg, #ffffff 0%, #ffffff ' + dis + '%,' + grn + ' ' + dis + '%,' + grn + ' 95%, #ffffff 95%,' + rd + ' 95%, ' + rd + ' 100%)';
 				for (x = 0; x < results.results.length; x++) {
 					place = results.order.indexOf(results.results[x].best) + 1;
@@ -384,6 +401,7 @@ footer {
 				}
 
 			} else {
+				//console.log('2nd');
 				maxRound = 0;
 				last = 0;
 				dis = ((Number(MR) - min) / (max - min)) * (90) + 5;
@@ -439,8 +457,8 @@ footer {
 					$('#round_' + x).html(rndRes + ' <small> R' + (res.data.length) + '</small>');
 					$('#best_' + x).html(resBest);
 					$('#bar_' + x).css('color', 'black');
-					if (res.data.length >= maxRound) {
-						maxRound = res.data.length;
+					//console.log(data.head.athlete,res.number);
+					if(data.head.athlete == res.number){
 						last = x;
 					}
 					ressi.push({
@@ -467,7 +485,6 @@ footer {
 			}
 		});
 
-
 		// outputs 2dp for measurement, and '-' if round passed
 		function resultify(res) {
 			var out = res;
@@ -479,11 +496,21 @@ footer {
 			return out;
 		}
 
+		function getEpoch(dateString){
+			if(!dateString.match(/-/)){
+		    dateString = dateString.replace(' GMT','');
+		    var tempDateString = new Date().toISOString();
+		    dateString = tempDateString.split('T')[0]+'T'+dateString;
+		  }
+		  return  new Date(dateString).getTime();
+		}
+
 		// processes results order, adds extra fields for display purposes
 		function parseResults(results) {
 			var order = [];
 			var min = 10000;
 			var max = 0;
+			//console.log(results);
 			for (var x = 0; x < results.length; x++) {
 				var dat = JSON.parse(JSON.stringify(results[x].data));
 				dat = dat.sort(compareNumbers);
@@ -502,6 +529,92 @@ footer {
 			};
 		}
 
+		function getUrlVars(){
+		    var vars = [], hash;
+		    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+		    for(var i = 0; i < hashes.length; i++)
+		    {
+		        hash = hashes[i].split('=');
+		        vars.push(hash[0]);
+		        vars[hash[0]] = hash[1];
+		    }
+		    return vars;
+		}
+
+
+		function parseData(inter){
+
+			if(inter && inter.contextResponses && inter.contextResponses[0].statusCode.code == '200' && inter.contextResponses[0].contextElement && inter.contextResponses[0].contextElement.attributes){
+				var results = [];//console.log(inter.contextResponses[0].contextElement.attributes);
+				var name;
+				var match;
+				var tempData = {};
+				var round=0;
+				var latest = 0;
+				var athlete = 0;
+				var location;
+				var elements = inter.contextResponses[0].contextElement.attributes;
+				for(var e = 0; e<elements.length;e++){
+					
+					switch(elements[e].name) {
+					    case 'starters':
+					        for(var i = 0;i<elements[e].value.length;i++){
+					        	
+					        	results.push({
+					        		number:elements[e].value[i].bib,
+					        		first_name:elements[e].value[i].given_name,
+					        		last_name:elements[e].value[i].family_name,
+					        		club:elements[e].value[i].team,
+					        		data:[]
+					        	});
+					        }
+
+
+
+
+					        break;
+					    case 'observations':
+					    	//console.log(elements[e]);
+					        for(var i in elements[e].value){
+					        	
+					        	var thisTime = getEpoch(elements[e].value[i].timestamp);
+					        	//console.log(elements[e].value[i].bib,thisTime);
+					        	if (thisTime>latest){
+					        		//console.log(i,elements[e].value[i].timestamp);
+					        		latest = thisTime;
+					        		athlete = elements[e].value[i].bib;
+					        	}
+					        	if(!tempData[elements[e].value[i].bib])tempData[elements[e].value[i].bib] = [];
+					        	var res = 'X';
+					        	if(Number(elements[e].value[i].distance)>0) res = Number(elements[e].value[i].distance);
+					        	tempData[elements[e].value[i].bib][parseInt(elements[e].value[i].round_num)-1] = res;
+					        	if(tempData[elements[e].value[i].bib].length>round)round = tempData[elements[e].value[i].bib].length;
+					        }
+					        //console.log('ATHLETE',athlete,latest);
+					        break;
+
+					    case 'name':
+					        name = elements[e].value;
+					        break;
+					     case 'match':
+					        match = (elements[e].value);
+					        break;
+					    case 'location':
+					    	location = (elements[e].value);
+					    	break;
+
+
+					    
+					}
+					
+				}
+				for(var res = 0;res<results.length;res++){
+					results[res].data = tempData[results[res].number] || [];
+				}
+				return {head:{athlete:athlete,round:round},name:name,match:match,location:location,results:results};
+			}
+		}
+
 		// unhide athlete information
 		$('body').on('click', '.athlete-more', function() {
 			$('.details-no' + $(this).data('id')).toggle();
@@ -510,6 +623,7 @@ footer {
 			$('.details-no' + $(this).data('id')).toggle();
 		});
 	});
+
 	</script>
 </body>
 
