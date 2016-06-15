@@ -15,6 +15,10 @@ body {
 	padding: 20px;
 }
 
+
+
+
+
 .wideBar {
 	width: 50%;
 }
@@ -122,6 +126,7 @@ body {
 }
 
 .athlete-more {
+	
 	-webkit-transition: all 0.5s;
 	transition: all 0.5s;
 	/* Safari */
@@ -295,11 +300,11 @@ footer {
 	$('document').ready(function() {
 
 		//var eventID = 'opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee'; // SP - Men
-		//var eventID = "opentrack:length-event:97505321-6803-493b-b1ff-aafddfd0c7cc"; // Javelin - Men
+		var eventID = "opentrack:length-event:97505321-6803-493b-b1ff-aafddfd0c7cc"; // Javelin - Men
 		//var eventID = 'opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee'; // SP - Men
 		//var eventID = 'opentrack:length-event:7d25f3d6-91b6-4de2-9647-022787427c6f'; // TJ - men
 		//var eventID = 'opentrack:length-event:9a6f5590-411f-413e-9c03-332b3a592eda'; // Hammer - men
-		var eventID = 'opentrack:length-event:d39e544e-bb89-4778-be19-97cc6b207c6c'; // Shot - U13G
+		//var eventID = 'opentrack:length-event:d39e544e-bb89-4778-be19-97cc6b207c6c'; // Shot - U13G
 		var WR = '70.68';
 		var MR = '40.00';
 
@@ -309,7 +314,8 @@ footer {
 		if(vals.mr && !isNaN(vals.mr))MR=vals.mr;
 
 
-		var socket = io.connect("http://52.17.157.187:3003?id="+eventID); // setup websocket
+		//var socket = io.connect("http://52.17.157.187:3003?id="+eventID); // setup websocket
+		var socket = io.connect("https://www.harrisandbailey.com:3003?id="+eventID, {secure: true});
 		//socket.join('opentrack:length-event:cd5b84a3-a47f-4d32-afba-e1197ac8a4ee');
 		socket.on('update', function(data) { // react to update call from server
 			data = (parseData(data));
